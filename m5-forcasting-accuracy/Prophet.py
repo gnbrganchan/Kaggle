@@ -37,7 +37,9 @@ price = pd.read_csv("/content/drive/My Drive/input/m5-forecasting-accuracy/sell_
 calendar = pd.read_csv("/content/drive/My Drive/input/m5-forecasting-accuracy/calendar.csv")
 submission = pd.read_csv("/content/drive/My Drive/input/m5-forecasting-accuracy/sample_submission.csv")
 
-df_all = df.copy()
+# price.drop([""], axis = 1, inplace = True)
+calendar.drop(["weekday", "wday", "month", "year", "event_name_1", "event_type_1", "event_name_2", "event_type_2", "snap_CA", "snap_TX", "snap_WI"], axis = 1, inplace = True)
+
 WRMSSE = 0.0
 if os.path.exists("/content/drive/My Drive/sub.csv"):
     print("Read existing file.")
@@ -53,6 +55,20 @@ else:
 
 df = pd.melt(df,id_vars = df.columns[df.columns.str.endswith("id")],value_vars = df.columns[df.columns.str.startswith("d_")])
 df = df.rename(columns = {"value" : "sales"})
+
+df = df.merge(calendar, left_on  = "variable", right_on = "d",how = "left")
+del calendar
+gc.collect()
+# print("a")
+df = df.merge(price,on = ["store_id", "item_id", "wm_yr_wk"], how = "left")
+del price
+gc.collect()
+# print("b")
+df = df.dropna(subset = ["sell_price"])
+df['date'] = pd.to_datetime(df['date'])
+
+gc.collect()
+
 df = df.set_index("id")
 
 def RMSSE(pred, act, train):
@@ -84,12 +100,10 @@ l = ["F" + str(i+1) for i in range(28)]
 l.insert(0,"id")
 cols = ["F" + str(i+1) for i in range(28)]
 
+# print("c")
+
 for store_item_id in tqdm(ids):
     df_store_item = df.loc[store_item_id]
-    df_store_item = df_store_item.merge(calendar, left_on  = "variable", right_on = "d",how = "left")
-    df_store_item = df_store_item.merge(price,on = ["store_id", "item_id", "wm_yr_wk"], how = "left")
-    df_store_item = df_store_item.dropna(subset = ["sell_price"])
-    df_store_item['date'] = pd.to_datetime(df_store_item['date'])
     df_train = df_store_item.iloc[1:len(df_store_item)-28]
     df_val = df_store_item.iloc[len(df_store_item)-28:len(df_store_item)]
     model = Prophet()
