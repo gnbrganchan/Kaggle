@@ -5,6 +5,7 @@ import csv
 import sys
 import json
 import datetime
+import time
 
 import lightgbm as lgb
 import numpy as np
@@ -55,6 +56,7 @@ else:
 
 df = pd.melt(df,id_vars = df.columns[df.columns.str.endswith("id")],value_vars = df.columns[df.columns.str.startswith("d_")])
 df = df.rename(columns = {"value" : "sales"})
+df.drop(["dept_id", "cat_id", "state_id"], axis = 1, inplace = True)
 
 df = df.merge(calendar, left_on  = "variable", right_on = "d",how = "left")
 del calendar
@@ -65,6 +67,7 @@ gc.collect()
 df = df.dropna(subset = ["sell_price"])
 df['date'] = pd.to_datetime(df['date'])
 
+df.drop(["store_id", "item_id", "wm_yr_wk"], axis = 1, inplace = True)
 gc.collect()
 
 df = df.set_index("id")
@@ -100,6 +103,8 @@ l = ["F" + str(i+1) for i in range(28)]
 l.insert(0,"id")
 cols = ["F" + str(i+1) for i in range(28)]
 
+time.sleep(1)
+
 for store_item_id in tqdm(ids):
     df_store_item = df.loc[store_item_id]
     df_train = df_store_item.iloc[1:len(df_store_item)-28]
@@ -130,7 +135,10 @@ for store_item_id in tqdm(ids):
     sub = sub.append(sub_id[l])
     
     sub.to_csv("/content/drive/My Drive/sub.csv", index=False)
-    res.to_csv("/content/drive/My Drive/res.csv", index=False)    
+    res.to_csv("/content/drive/My Drive/res.csv", index=False)  
+
+    del df_store_item, df_train, df_val, model, future, forecast, sub_id
+    gc.collect()  
 
 submission = submission.loc[:,["id"]].merge(sub, on = "id", how = "left").fillna(0)
 submission.to_csv("/content/drive/My Drive/submission.csv", index=False)
