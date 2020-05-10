@@ -6,8 +6,8 @@ Kaggleのコンテスト参加時に提出したソースコードを置きま�
 EDAはR Notebook, モデル作成はPythonが多いです。
  
 ## 必要要件
- 
--特になし
+- Python 3.7
+- jupyter notebook
  
 ## インストール
  
