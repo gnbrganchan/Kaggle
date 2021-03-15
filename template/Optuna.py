@@ -70,24 +70,23 @@ def objective(trial):
   folds = StratifiedKFold(n_splits=nsplits, shuffle = True, random_state = rand)
 
   # LGB
-  params = {
-    "objective": "binary",
-    "boosting": trial.suggest_categorical('boosting',["gbdt","dart"]),
-    "max_depth": trial.suggest_int('max_depth', 2, 20),
-    "num_leaves": trial.suggest_int('num_leaves', 6, 200),
-    "subsample": trial.suggest_uniform('subsample', 0.5, 1.0),
+  lgb_params = {
+    "objective": "regression",
+    "boosting_type": "gbdt",
+    "n_estimators": trial.suggest_int('n_estimators', 1, 30) * 100,
+    "max_depth": trial.suggest_int('max_depth', 2, 70),
+    "num_leaves": trial.suggest_int('num_leaves', 6, 4000),
+    "subsample": trial.suggest_uniform('subsample', 0.3, 1.0),
     "subsample_freq": 1,
     "bagging_seed": rand,
     "learning_rate": trial.suggest_uniform('learning_rate', 0.01, 0.2),
-    "feature_fraction": trial.suggest_uniform('feature_fraction', 0.5, 1.0),
-    "feature_seed": rand,
-    "min_data_in_leaf": trial.suggest_int('min_data_in_leaf', 2, 1000),
-    "lambda_l1": trial.suggest_int('lambda_l1', 0, 200),
-    "lambda_l2": trial.suggest_int('lambda_l2', 0, 200),
+    "colsample_bytree": trial.suggest_uniform('colsample_bytree', 0.3, 1.0),
+    "min_child_samples": trial.suggest_int('min_child_samples', 2, 1000),
+    "reg_alpha": trial.suggest_int('reg_alpha', 0, 200),
+    "reg_lambda": trial.suggest_int('reg_lambda', 0, 200),
     "random_state": rand,
-    "metric": "auc",
-    "verbose" : -1
-    }
+    "metric": "rmse"
+  }
 
   # # XGB
   # xgb_params = {
